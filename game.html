@@ -254,7 +254,7 @@ function hud(){
 function endGame(){
   mo.style.display='block';
   mt.textContent=won?'LEVEL CLEAR!':'GAME OVER!';
-  ms.textContent=won?`BAGS: ${score} pts — All pigs gone!`:`Pigs survived! BAGS: ${score}`;
+  ms.textContent=won?`BAGS: ${score} All pigs gone!`:`Pigs survived! BAGS: ${score}`;
   mo.querySelector('#rb').style.pointerEvents='all';
   document.getElementById('nb').style.display=won?'block':'none';
   document.getElementById('nb').style.pointerEvents=won?'all':'none';
