@@ -39,7 +39,7 @@
     <div id="ah">DRAG MOAI TO AIM · RELEASE TO LAUNCH</div>
   </div>
   <div id="hud">
-    <div><div class="hl">SCORE</div><div class="hv" id="sv">0</div></div>
+    <div><div class="hl">BAGS</div><div class="hv" id="sv">0</div></div>
     <div style="text-align:center"><div class="hl">MOAIS</div><div class="hv" id="mv">3</div></div>
     <div style="text-align:right"><div class="hl">PIGS</div><div class="hv" id="pv">3</div></div>
   </div>
@@ -254,7 +254,7 @@ function hud(){
 function endGame(){
   mo.style.display='block';
   mt.textContent=won?'LEVEL CLEAR!':'GAME OVER!';
-  ms.textContent=won?`Score: ${score} pts — All pigs gone!`:`Pigs survived! Score: ${score}`;
+  ms.textContent=won?`BAGS: ${score} pts — All pigs gone!`:`Pigs survived! BAGS: ${score}`;
   mo.querySelector('#rb').style.pointerEvents='all';
   document.getElementById('nb').style.display=won?'block':'none';
   document.getElementById('nb').style.pointerEvents=won?'all':'none';
