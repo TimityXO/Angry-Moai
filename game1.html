@@ -44,7 +44,7 @@
     <div id="ah">DRAG MOAI TO AIM · 6 MOAIS · 6 PIGS</div>
   </div>
   <div id="hud">
-    <div><div class="hl">SCORE</div><div class="hv" id="sv">0</div></div>
+    <div><div class="hl">BAGS</div><div class="hv" id="sv">0</div></div>
     <div style="text-align:center"><div class="hl">MOAIS</div><div class="hv" id="mv">6</div></div>
     <div style="text-align:right"><div class="hl">PIGS</div><div class="hv" id="pv">6</div></div>
   </div>
@@ -343,13 +343,13 @@ function endGame(){
   if(won){
     mt.textContent='FORTRESS CLEARED!';
     mt.style.color='#FFD700';
-    ms.textContent=`EPIC! Score: ${score} pts`;
+    ms.textContent=`EPIC! BAGS: ${score} pts`;
     document.getElementById('nb').style.display='block';
     document.getElementById('nb').style.pointerEvents='all';
   } else {
     mt.textContent='THE PIGS HELD FIRM!';
     mt.style.color='#FF4400';
-    ms.textContent=`${pigs.filter(p=>p.alive).length} pig(s) survived. Score: ${score}`;
+    ms.textContent=`${pigs.filter(p=>p.alive).length} pig(s) survived. BAGS: ${score}`;
     document.getElementById('nb').style.display='none';
   }
   document.getElementById('rb').style.pointerEvents='all';
