@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ANGRY MOAI — LEVEL 3</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:#0a0010;height:100%;overflow:hidden;}
+  body{display:flex;align-items:center;justify-content:center;}
+  #gr{background:#0a0010;font-family:'Arial Black',Arial,sans-serif;user-select:none;-webkit-user-select:none;overflow:hidden;position:relative;width:100%;max-width:720px;}
+  #tb{text-align:center;padding:clamp(5px,2vw,12px) 0 3px;letter-spacing:clamp(2px,1vw,5px);font-size:clamp(13px,3.2vw,22px);font-weight:900;color:#CC44FF;text-shadow:2px 2px 0 #000,-1px -1px 0 #FFD700;background:#0a0010;border-bottom:3px solid #CC44FF;line-height:1.3;}
+  #sb{font-size:clamp(7px,1.6vw,11px);color:#FFD700;letter-spacing:clamp(1px,0.4vw,2px);font-weight:400;margin-top:2px;}
+  #lvlbadge{display:inline-block;background:#CC44FF;color:#fff;font-size:clamp(8px,1.8vw,12px);padding:2px 10px;border-radius:4px;letter-spacing:2px;margin-left:8px;vertical-align:middle;}
+  #cw{position:relative;width:100%;overflow:hidden;}
+  canvas{display:block;width:100%;touch-action:none;cursor:crosshair;}
+  #hud{display:flex;align-items:center;justify-content:space-between;background:#0a0010;border-top:2px solid #CC44FF;padding:clamp(4px,1.5vw,9px) clamp(10px,3vw,22px);}
+  .hl{color:#CC44FF;font-size:clamp(8px,2vw,13px);font-weight:900;letter-spacing:1px;}
+  .hv{color:#fff;font-size:clamp(14px,4vw,22px);font-weight:900;}
+  #mo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(5,0,18,0.95);border:3px solid #CC44FF;border-radius:12px;color:#CC44FF;font-weight:900;font-size:clamp(13px,3.8vw,21px);padding:clamp(14px,4vw,28px) clamp(18px,5vw,42px);text-align:center;display:none;z-index:99;letter-spacing:2px;pointer-events:none;width:clamp(230px,76vw,450px);}
+  #mo .sub{color:#fff;font-size:clamp(10px,2.4vw,13px);margin-top:8px;letter-spacing:1px;}
+  .obtn{margin-top:10px;border:none;border-radius:6px;font-size:clamp(11px,2.8vw,15px);font-weight:900;padding:clamp(7px,2vw,10px) clamp(14px,3.5vw,26px);cursor:pointer;letter-spacing:1px;pointer-events:all;display:block;width:100%;}
+  #rb{background:#CC44FF;color:#fff;}
+  #rb:active{background:#8800cc;}
+  #nb{background:#FFD700;color:#111;display:none;}
+  #nb:active{background:#fff;}
+  #back2{background:transparent;color:#FF4400;border:1.5px solid #FF4400;display:block;margin-top:6px;}
+  #back2:active{background:#FF4400;color:#fff;}
+  #back1{background:transparent;color:#FFD700;border:1.5px solid #FFD700;display:block;}
+  #back1:active{background:#FFD700;color:#111;}
+  #ah{position:absolute;bottom:clamp(4px,1.2vw,10px);left:50%;transform:translateX(-50%);color:rgb(255, 255, 255);font-size:clamp(7px,1.4vw,11px);font-weight:900;letter-spacing:1px;pointer-events:none;white-space:nowrap;}
+</style>
+</head>
+<body>
+<div id="gr">
+  <div id="tb">ANGRY MOAI <span id="lvlbadge">LEVEL 3</span><br><span id="sb">🗿🗿🗿 CITADEL OF DOOM 🗿🗿🗿</span></div>
+  <div id="cw">
+    <canvas id="gc"></canvas>
+    <div id="mo">
+      <div id="mt">CITADEL DESTROYED!</div>
+      <div class="sub" id="ms"></div>
+      <button id="rb" class="obtn" onclick="initGame()">TRY AGAIN</button>
+      <button id="nb" class="obtn" onclick="alert('You are a true Moai master! 🗿\nMore levels coming soon...')">🗿 YOU ARE A MOAI!</button>
+      <button id="back2" class="obtn" onclick="window.location.href='game.html'">← LEVEL 2</button>
+      <button id="back1" class="obtn" onclick="window.location.href='game1.html'">← LEVEL 1</button>
+    </div>
+    <div id="ah">10 MOAIS · 9 PIGS · ARMORED WALLS · GOOD LUCK</div>
+  </div>
+  <div id="hud">
+    <div><div class="hl">BAGS</div><div class="hv" id="sv">0</div></div>
+    <div style="text-align:center"><div class="hl">MOAIS</div><div class="hv" id="mv">10</div></div>
+    <div style="text-align:right"><div class="hl">PIGS</div><div class="hv" id="pv">9</div></div>
+  </div>
+</div>
+
+<script>
+const canvas=document.getElementById('gc'),ctx=canvas.getContext('2d');
+const mo=document.getElementById('mo'),mt=document.getElementById('mt'),ms=document.getElementById('ms');
+const LW=680,LH=440;
+canvas.width=LW;canvas.height=LH;
+const GRAV=0.32,GND=LH-52,SX=88,SY=GND-65,PLIM=100,POW=0.26;
+let moais,pigs,blocks,parts,score,drag,dX,dY,over,won;
+let mVX=0,mVY=0,mX=SX,mY=SY,mA=false,mLeft=0,cool=0,animId;
+
+// Pulsing glow phase for evil atmosphere
+let phase=0;
+
+function rnd(a,b){return a+Math.random()*(b-a);}
+
+function initGame(){
+  over=false;won=false;score=0;mA=false;drag=false;
+  mVX=0;mVY=0;mX=SX;mY=SY;cool=0;parts=[];phase=0;
+  mo.style.display='none';
+  mLeft=10;
+
+  // CITADEL OF DOOM — 3 interconnected towers + underground bunker + rooftop pigs
+  // All outer walls have 4 HP, inner walls 3 HP — takes many hits!
+  blocks=[
+    // ========= BUNKER BASE (wide ground-level wall) =========
+    {x:300,y:GND-22,w:360,h:22,hp:1,c:'#4a3060'},  // ground bunker slab
+
+    // ========= LEFT TOWER =========
+    {x:300,y:GND-130,w:22,h:108,hp:1,c:'#5a3870'}, // left outer wall
+    {x:370,y:GND-130,w:22,h:108,hp:1,c:'#5a3870'}, // right outer wall
+    {x:322,y:GND-24,w:46,h:4,hp:1,c:'#7a58a0'},    // inner base cap
+    {x:298,y:GND-148,w:96,h:20,hp:1,c:'#6a489a'},  // roof slab
+    {x:322,y:GND-96,w:46,h:14,hp:1,c:'#7a58a0'},   // mid floor
+    // battlements
+    {x:298,y:GND-168,w:22,h:22,hp:1,c:'#8858b0'},
+    {x:374,y:GND-168,w:22,h:22,hp:1,c:'#8858b0'},
+
+    // ========= CENTER MEGA-TOWER =========
+    {x:430,y:GND-190,w:24,h:168,hp:1,c:'#5a3870'}, // left wall
+    {x:510,y:GND-190,w:24,h:168,hp:1,c:'#5a3870'}, // right wall
+    {x:428,y:GND-208,w:108,h:20,hp:1,c:'#6a489a'}, // roof
+    {x:452,y:GND-130,w:62,h:14,hp:1,c:'#7a58a0'},  // mid floor 1
+    {x:452,y:GND-80,w:62,h:14,hp:1,c:'#7a58a0'},   // mid floor 2
+    // battlements top
+    {x:428,y:GND-228,w:24,h:22,hp:1,c:'#9868c0'},
+    {x:470,y:GND-228,w:20,h:22,hp:1,c:'#9868c0'},
+    {x:510,y:GND-228,w:24,h:22,hp:1,c:'#9868c0'},
+    // inner center pillar
+    {x:454,y:GND-190,w:14,h:168,hp:1,c:'#4a3060'},
+    {x:496,y:GND-190,w:14,h:168,hp:1,c:'#4a3060'},
+
+    // ========= RIGHT TOWER =========
+    {x:572,y:GND-130,w:22,h:108,hp:1,c:'#5a3870'},
+    {x:638,y:GND-130,w:22,h:108,hp:1,c:'#5a3870'},
+    {x:570,y:GND-148,w:92,h:20,hp:1,c:'#6a489a'},
+    {x:592,y:GND-96,w:46,h:14,hp:1,c:'#7a58a0'},
+    {x:570,y:GND-168,w:22,h:22,hp:1,c:'#8858b0'},
+    {x:640,y:GND-168,w:22,h:22,hp:1,c:'#8858b0'},
+
+    // ========= BRIDGE connecting all three towers =========
+    {x:390,y:GND-148,w:42,h:14,hp:1,c:'#7a58a0'}, // left-center bridge
+    {x:534,y:GND-148,w:40,h:14,hp:1,c:'#7a58a0'}, // center-right bridge
+
+    // ========= HIGH BRIDGE connecting towers at top =========
+    {x:392,y:GND-208,w:40,h:12,hp:1,c:'#8858b0'},
+    {x:534,y:GND-208,w:40,h:12,hp:1,c:'#8858b0'},
+  ];
+
+  // 9 pigs at various levels — many hidden deep inside
+  pigs=[
+    // Ground level inside bunker
+    {x:342,y:GND-40,r:16,alive:true,dy:0},
+    {x:484,y:GND-40,r:16,alive:true,dy:0},
+    {x:610,y:GND-40,r:16,alive:true,dy:0},
+
+    // Mid-floor left tower
+    {x:342,y:GND-112,r:16,alive:true,dy:0},
+
+    // Mid floors center tower
+    {x:484,y:GND-96,r:16,alive:true,dy:0},
+    {x:484,y:GND-146,r:16,alive:true,dy:0},
+
+    // Mid-floor right tower
+    {x:610,y:GND-112,r:16,alive:true,dy:0},
+
+    // Rooftop pigs
+    {x:342,y:GND-168,r:16,alive:true,dy:0},   // left tower roof
+    {x:484,y:GND-246,r:16,alive:true,dy:0},   // center tower very top
+  ];
+
+  hud();cancelAnimationFrame(animId);loop();
+}
+
+function loop(){phase+=0.04;upd();draw();if(!over)animId=requestAnimationFrame(loop);else endGame();}
+
+function upd(){
+  cool=Math.max(0,cool-1);
+  if(mA){
+    mVY+=GRAV;mX+=mVX;mY+=mVY;colCheck();
+    if(mY>GND+80||mX>LW+80||mX<-80){mA=false;}
+  }
+  for(let b of blocks){if(b.cr>0){b.cr--;if(b.cr<=0)b.gone=true;}}
+  for(let p of pigs){if(p.dy>0){p.dy--;if(p.dy<=0)p.alive=false;}}
+  parts=parts.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.18;p.life--;return p.life>0;});
+  if(pigs.filter(p=>p.alive).length===0&&!over){over=true;won=true;}
+  if(mLeft===0&&!mA&&pigs.filter(p=>p.alive).length>0&&!over){over=true;won=false;}
+  hud();
+}
+
+function colCheck(){
+  let r=22;
+  for(let b of blocks){
+    if(b.gone||b.cr)continue;
+    if(mX+r>b.x&&mX-r<b.x+b.w&&mY+r>b.y&&mY-r<b.y+b.h){
+      b.hp--;sp(mX,mY,'#a060d0',10);
+      if(b.hp<=0){b.cr=14;score+=60;}
+      let mh=Math.min(mX+r-b.x,b.x+b.w-(mX-r)),mv=Math.min(mY+r-b.y,b.y+b.h-(mY-r));
+      if(mh<mv)mVX*=-0.42;else mVY*=-0.42;
+      mVX*=0.78;mVY*=0.78;
+      if(Math.abs(mVX)+Math.abs(mVY)<1.5){mA=false;}
+    }
+  }
+  for(let p of pigs){
+    if(!p.alive||p.dy)continue;
+    let dx=mX-p.x,dy=mY-p.y;
+    if(Math.sqrt(dx*dx+dy*dy)<r+p.r){
+      p.dy=14;score+=200;
+      sp(p.x,p.y,'#5a3',28);sp(p.x,p.y,'#CC44FF',14);sp(p.x,p.y,'#FFD700',8);
+      mVX*=0.5;mVY*=0.5;
+    }
+  }
+  if(mY+r>=GND){
+    mY=GND-r;mVY*=-0.26;mVX*=0.7;
+    sp(mX,GND,'#CC44FF',6);
+    if(Math.abs(mVY)<1.2){mA=false;}
+  }
+}
+
+function sp(x,y,c,n){
+  for(let i=0;i<n;i++)parts.push({x,y,vx:rnd(-6,6),vy:rnd(-7,0.5),col:c,life:rnd(22,42)|0,r:rnd(2,6)});
+}
+
+function draw(){
+  ctx.clearRect(0,0,LW,LH);
+  drawSky();drawGround();drawPowerMeter();drawSlingshot();
+  drawBlocks();drawPigs();drawParticles();drawTrajectory();drawBullet();drawQueue();
+}
+
+function drawSky(){
+  // Deep purple void sky
+  ctx.fillStyle='#0a0010';ctx.fillRect(0,0,LW,GND);
+
+  // Nebula glow in background
+  let grd=ctx.createRadialGradient(490,GND/2,40,490,GND/2,200);
+  grd.addColorStop(0,`rgba(120,0,180,${0.12+Math.sin(phase)*0.06})`);
+  grd.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=grd;ctx.fillRect(0,0,LW,GND);
+
+  let grd2=ctx.createRadialGradient(340,GND/3,20,340,GND/3,140);
+  grd2.addColorStop(0,`rgba(80,0,140,${0.1+Math.sin(phase+1)*0.05})`);
+  grd2.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=grd2;ctx.fillRect(0,0,LW,GND);
+
+  // Stars — dense, some pulsing purple
+  for(let i=0;i<30;i++){
+    let sx=(i*97+17)%LW,sy=(i*61+11)%(GND-30);
+    let pulse=i%5===0?0.5+0.5*Math.sin(phase+i):1;
+    ctx.globalAlpha=pulse*0.9;
+    ctx.fillStyle=i%4===0?'#CC44FF':'#fff';
+    ctx.beginPath();ctx.arc(sx,sy,i%6===0?1.5:0.9,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // Evil skull moon
+  ctx.fillStyle='#2a0040';ctx.beginPath();ctx.arc(LW-58,38,22,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=`rgba(204,68,255,${0.6+Math.sin(phase)*0.4})`;
+  ctx.lineWidth=2;ctx.beginPath();ctx.arc(LW-58,38,22,0,Math.PI*2);ctx.stroke();
+  // skull eyes on moon
+  ctx.fillStyle=`rgba(204,68,255,${0.7+Math.sin(phase)*0.3})`;
+  ctx.beginPath();ctx.arc(LW-65,34,4,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(LW-51,34,4,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(204,68,255,0.6)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(LW-58,44,6,0.1,Math.PI-0.1);ctx.stroke();
+
+  // Dark citadel silhouette in bg
+  ctx.fillStyle='rgba(20,5,35,0.85)';
+  ctx.fillRect(295,GND-250,380,250);
+  ctx.fillRect(320,GND-290,60,50);
+  ctx.fillRect(440,GND-310,90,70);
+  ctx.fillRect(590,GND-270,70,60);
+  // battlements on silhouette
+  ctx.fillStyle='rgba(20,5,35,0.85)';
+  for(let xi=295;xi<675;xi+=20){ctx.fillRect(xi,GND-252,11,16);}
+}
+
+function drawGround(){
+  ctx.fillStyle='#1a0030';ctx.fillRect(0,GND,LW,LH-GND);
+  ctx.fillStyle='#0a0010';ctx.fillRect(0,GND,LW,3);
+  // glowing cracks in ground
+  ctx.strokeStyle=`rgba(204,68,255,${0.3+Math.sin(phase)*0.15})`;
+  ctx.lineWidth=1;
+  for(let i=0;i<6;i++){
+    let gx=300+i*60;
+    ctx.beginPath();ctx.moveTo(gx,GND+3);ctx.lineTo(gx+18,GND+28);ctx.lineTo(gx+8,GND+50);ctx.stroke();
+  }
+  ctx.fillStyle='#2a0050';
+  for(let i=0;i<LW;i+=38)ctx.fillRect(i,GND+4,20,7);
+}
+
+function drawPowerMeter(){
+  if(!drag)return;
+  let dx=dX-SX,dy=dY-SY,fr=Math.min(1,Math.sqrt(dx*dx+dy*dy)/PLIM);
+  let bw=80,bh=10,bx=SX-40,by=SY-95;
+  ctx.fillStyle='rgba(5,0,18,0.8)';ctx.beginPath();ctx.roundRect(bx-2,by-2,bw+4,bh+4,4);ctx.fill();
+  ctx.fillStyle=fr<0.4?'#5f5':fr>0.75?'#CC44FF':'#FFD700';
+  ctx.beginPath();ctx.roundRect(bx,by,bw*fr,bh,3);ctx.fill();
+  ctx.strokeStyle='#CC44FF';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(bx,by,bw,bh,3);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='bold 9px Arial';ctx.textAlign='center';
+  ctx.fillText('POWER',bx+bw/2,by-4);ctx.textAlign='left';
+}
+
+function drawSlingshot(){
+  ctx.save();
+  ctx.strokeStyle='#3a1a5a';ctx.lineWidth=8;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(SX-12,SY+14);ctx.lineTo(SX-16,SY-36);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(SX+12,SY+14);ctx.lineTo(SX+16,SY-36);ctx.stroke();
+  ctx.strokeStyle='#1a0030';ctx.lineWidth=9;
+  ctx.beginPath();ctx.moveTo(SX-10,SY+16);ctx.lineTo(SX,SY+28);ctx.lineTo(SX+10,SY+16);ctx.stroke();
+  if(drag){
+    ctx.strokeStyle='#CC44FF';ctx.lineWidth=2.5;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(SX-14,SY-32);ctx.lineTo(dX,dY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(SX+14,SY-32);ctx.lineTo(dX,dY);ctx.stroke();
+    ctx.setLineDash([]);
+  } else {
+    ctx.strokeStyle='rgba(204,68,255,0.25)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(SX-14,SY-32);ctx.lineTo(SX,SY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(SX+14,SY-32);ctx.lineTo(SX,SY);ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawTrajectory(){
+  if(!drag)return;
+  let dx=SX-dX,dy=SY-dY,spd=Math.sqrt(dx*dx+dy*dy);
+  let vx=dx*POW,vy=dy*POW-spd*0.012,tx=SX,ty=SY;
+  for(let i=0;i<28;i++){
+    vy+=GRAV;tx+=vx;ty+=vy;
+    if(i%2===0){ctx.globalAlpha=1-(i/28)*0.7;ctx.fillStyle='#CC44FF';ctx.beginPath();ctx.arc(tx,ty,3,0,Math.PI*2);ctx.fill();}
+    if(ty>GND)break;
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawBlocks(){
+  for(let b of blocks){
+    if(b.gone)continue;
+    let fade=b.cr?(b.cr/14):1;
+    ctx.globalAlpha=fade;
+    ctx.fillStyle=b.c;
+    ctx.fillRect(b.x,b.y,b.w,b.h);
+    // Purple glowing border
+    ctx.strokeStyle=`rgba(204,68,255,${0.5+Math.sin(phase)*0.2})`;
+    ctx.lineWidth=1;ctx.strokeRect(b.x,b.y,b.w,b.h);
+    // stone line texture
+    if(b.h>18){
+      ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=0.5;
+      ctx.beginPath();ctx.moveTo(b.x,b.y+b.h/2);ctx.lineTo(b.x+b.w,b.y+b.h/2);ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  }
+}
+
+function drawPigs(){
+  for(let p of pigs){
+    if(!p.alive)continue;
+    let sc=p.dy>0?(p.dy/14):1;
+    ctx.globalAlpha=sc;ctx.save();ctx.translate(p.x,p.y);ctx.scale(sc,sc);
+
+    // Body
+    ctx.fillStyle='#3d8518';ctx.strokeStyle='#111';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(0,0,p.r,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+    // Full ARMOR — level 3 pigs have full dark armor
+    ctx.fillStyle='#2a1a40';
+    ctx.beginPath();ctx.arc(0,-p.r*0.1,p.r*0.95,Math.PI*0.85,Math.PI*0.15,true);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#CC44FF';ctx.lineWidth=0.8;ctx.stroke();
+    // armor plates
+    ctx.fillStyle='#3a2460';
+    ctx.beginPath();ctx.moveTo(-p.r*.6,p.r*.1);ctx.lineTo(-p.r*.7,p.r*.55);ctx.lineTo(p.r*.7,p.r*.55);ctx.lineTo(p.r*.6,p.r*.1);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#CC44FF';ctx.lineWidth=0.7;ctx.stroke();
+    // helmet visor slit
+    ctx.fillStyle='rgba(204,68,255,0.4)';
+    ctx.fillRect(-p.r*.45,-p.r*.25,p.r*.9,p.r*.14);
+
+    // Eyes through visor
+    ctx.fillStyle='rgba(204,68,255,0.9)';
+    ctx.beginPath();ctx.arc(-p.r*.25,-p.r*.19,p.r*.1,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(p.r*.25,-p.r*.19,p.r*.1,0,Math.PI*2);ctx.fill();
+
+    // Snout
+    ctx.fillStyle='#1e5a0a';ctx.beginPath();ctx.arc(0,p.r*.18,p.r*.24,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#0a2a04';ctx.lineWidth=.6;ctx.stroke();
+    // Evil grin
+    ctx.strokeStyle='rgba(204,68,255,0.7)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(-p.r*.22,p.r*.42);ctx.lineTo(-p.r*.1,p.r*.52);ctx.lineTo(p.r*.1,p.r*.52);ctx.lineTo(p.r*.22,p.r*.42);ctx.stroke();
+
+    ctx.restore();ctx.globalAlpha=1;
+  }
+}
+
+function drawBullet(){
+  if(mA){drawMoai(ctx,mX,mY,22,Math.atan2(mVY,mVX));}
+  else if(drag){drawMoai(ctx,dX,dY,22,0);}
+  else if(mLeft>0){drawMoai(ctx,SX,SY,22,0);}
+}
+
+function drawQueue(){
+  let waiting=mLeft-(mA||drag?0:1);
+  for(let i=0;i<waiting;i++){drawMoai(ctx,SX-50-i*38,SY+10,13,0);}
+}
+
+function drawParticles(){
+  for(let p of parts){
+    ctx.globalAlpha=p.life/40;ctx.fillStyle=p.col;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawMoai(c,x,y,r,angle){
+  c.save();c.translate(x,y);c.rotate(angle*0.12);
+  let h=r*2.5,w=r*1.5;
+  c.fillStyle='#e8e0d0';c.strokeStyle='#111';c.lineWidth=1.5;
+  c.beginPath();c.roundRect(-w/2,-h*.55,w,h,[r*.3,r*.3,r*.18,r*.18]);c.fill();c.stroke();
+  c.fillStyle='#d0c8ba';c.fillRect(-w/2+2,-h*.06,w-4,h*.38);
+  c.fillStyle='#c0b8ae';c.fillRect(-w/2+4,h*.02,w-8,h*.28);
+  let ey=-h*.18;
+  c.fillStyle='#111';
+  c.beginPath();c.ellipse(-w*.24,ey,r*.23,r*.16,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.ellipse(w*.24,ey,r*.23,r*.16,0,0,Math.PI*2);c.fill();
+  c.strokeStyle='#111';c.lineWidth=1.4;
+  c.beginPath();c.moveTo(-w*.34,ey-r*.22);c.lineTo(-w*.12,ey-r*.08);c.stroke();
+  c.beginPath();c.moveTo(w*.34,ey-r*.22);c.lineTo(w*.12,ey-r*.08);c.stroke();
+  c.strokeStyle='#444';c.lineWidth=1.2;
+  c.beginPath();c.moveTo(-w*.2,ey+r*.34);c.quadraticCurveTo(0,ey+r*.2,w*.2,ey+r*.34);c.stroke();
+  c.fillStyle='#c8c0b0';c.fillRect(-w*.14,-h*.55,w*.28,r*.3);
+  c.restore();
+}
+
+function hud(){
+  document.getElementById('sv').textContent=score;
+  document.getElementById('mv').textContent=mLeft+(mA?1:0);
+  document.getElementById('pv').textContent=pigs.filter(p=>p.alive).length;
+}
+
+function endGame(){
+  mo.style.display='block';
+  if(won){
+    mt.textContent='CITADEL DESTROYED!';
+    mt.style.color='#FFD700';
+    ms.textContent=`LEGENDARY! BAGS: ${score} You are the Moai Master!`;
+    document.getElementById('nb').style.display='block';
+    document.getElementById('nb').style.pointerEvents='all';
+  } else {
+    mt.textContent='THE CITADEL STANDS!';
+    mt.style.color='#CC44FF';
+    let alive=pigs.filter(p=>p.alive).length;
+    ms.textContent=`${alive} armored pig${alive>1?'s':''} survived. BAGS: ${score}`;
+    document.getElementById('nb').style.display='none';
+  }
+  document.getElementById('rb').style.pointerEvents='all';
+  document.getElementById('back2').style.pointerEvents='all';
+  document.getElementById('back1').style.pointerEvents='all';
+}
+
+function gp(e){
+  let rc=canvas.getBoundingClientRect(),sx=LW/rc.width,sy=LH/rc.height;
+  if(e.touches)return{x:(e.touches[0].clientX-rc.left)*sx,y:(e.touches[0].clientY-rc.top)*sy};
+  return{x:(e.clientX-rc.left)*sx,y:(e.clientY-rc.top)*sy};
+}
+function onDown(e){
+  e.preventDefault();if(over||mA||cool>0||mLeft<=0)return;
+  let{x,y}=gp(e);
+  if(Math.sqrt((x-SX)**2+(y-SY)**2)<58){drag=true;dX=SX;dY=SY;}
+}
+function onMove(e){
+  e.preventDefault();if(!drag)return;
+  let{x,y}=gp(e),dx=x-SX,dy=y-SY,d=Math.sqrt(dx*dx+dy*dy);
+  if(d>PLIM){let f=PLIM/d;dx*=f;dy*=f;}
+  dX=SX+dx;dY=SY+dy;
+}
+function onUp(e){
+  e.preventDefault();if(!drag)return;drag=false;
+  let dx=SX-dX,dy=SY-dY,spd=Math.sqrt(dx*dx+dy*dy);
+  if(spd<10){mX=SX;mY=SY;return;}
+  if(mLeft<=0)return;
+  mLeft--;
+  mX=dX;mY=dY;mVX=dx*POW;mVY=dy*POW-spd*0.014;mA=true;cool=45;
+}
+canvas.addEventListener('mousedown',onDown);
+canvas.addEventListener('mousemove',onMove);
+canvas.addEventListener('mouseup',onUp);
+canvas.addEventListener('mouseleave',onUp);
+canvas.addEventListener('touchstart',onDown,{passive:false});
+canvas.addEventListener('touchmove',onMove,{passive:false});
+canvas.addEventListener('touchend',onUp,{passive:false});
+initGame();
+</script>
+</body>
+</html>
