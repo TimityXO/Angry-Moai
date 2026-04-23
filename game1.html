@@ -38,7 +38,7 @@
       <div id="mt">FORTRESS CLEARED!</div>
       <div class="sub" id="ms"></div>
       <button id="rb" class="obtn" onclick="initGame()">TRY AGAIN</button>
-      <button id="nb" class="obtn" onclick="alert('More levels coming soon! 🗿')">🗿 LEVEL 3 — COMING SOON</button>
+      <button id="nb" class="obtn" onclick="window.location.href='game3.html'">🗿 NEXT LEVEL →</button>
       <button id="backbtn" class="obtn" onclick="window.location.href='game.html'">← BACK TO LEVEL 1</button>
     </div>
     <div id="ah">DRAG MOAI TO AIM · 5 MOAIS · 6 PIGS</div>
@@ -49,7 +49,7 @@
     <div style="text-align:right"><div class="hl">PIGS</div><div class="hv" id="pv">6</div></div>
   </div>
 </div>
- 
+
 <script>
 const canvas=document.getElementById('gc'),ctx=canvas.getContext('2d');
 const mo=document.getElementById('mo'),mt=document.getElementById('mt'),ms=document.getElementById('ms');
@@ -57,18 +57,16 @@ const LW=680,LH=430;
 canvas.width=LW;canvas.height=LH;
 const GRAV=0.32,GND=LH-52,SX=88,SY=GND-65,PLIM=100,POW=0.26;
 let moais,pigs,blocks,parts,score,drag,dX,dY,over,won;
-let mVX=0,mVY=0,mX=SX,mY=SY,mA=false,mIdx=0,cool=0,animId;
- 
+let mVX=0,mVY=0,mX=SX,mY=SY,mA=false,mLeft=0,cool=0,animId;
+
 function rnd(a,b){return a+Math.random()*(b-a);}
- 
+
 function initGame(){
   over=false;won=false;score=0;mA=false;drag=false;
-  mVX=0;mVY=0;mX=SX;mY=SY;mIdx=0;cool=0;parts=[];
+  mVX=0;mVY=0;mX=SX;mY=SY;cool=0;parts=[];
   mo.style.display='none';
- 
-  // 5 moais this level
-  moais=[{a:true},{a:true},{a:true},{a:true},{a:true}];
- 
+  mLeft=5;
+
   // Dense multi-layer fortress with thick walls and platforms
   blocks=[
     // === LEFT TOWER (thick) ===
@@ -77,28 +75,28 @@ function initGame(){
     {x:328,y:GND-88,w:84,h:20,hp:3,c:'#999'}, // top slab
     // inner wall left tower
     {x:350,y:GND-68,w:38,h:50,hp:2,c:'#666'},
- 
+
     // === CENTER TOWER (tall) ===
     {x:455,y:GND-120,w:20,h:120,hp:3,c:'#777'},
     {x:515,y:GND-120,w:20,h:120,hp:3,c:'#777'},
     {x:453,y:GND-138,w:84,h:20,hp:3,c:'#999'}, // roof
     {x:453,y:GND-75,w:84,h:14,hp:2,c:'#aaa'},  // mid floor
- 
+
     // === RIGHT TOWER ===
     {x:590,y:GND-70,w:20,h:70,hp:3,c:'#777'},
     {x:645,y:GND-70,w:20,h:70,hp:3,c:'#777'},
     {x:588,y:GND-88,w:80,h:20,hp:3,c:'#999'},
     {x:608,y:GND-68,w:35,h:50,hp:2,c:'#666'},
- 
+
     // === CONNECTING BRIDGE high up ===
     {x:408,y:GND-138,w:48,h:14,hp:2,c:'#aaa'},  // left bridge
     {x:535,y:GND-138,w:56,h:14,hp:2,c:'#aaa'},  // right bridge
- 
+
     // === GROUND BARRIERS ===
     {x:410,y:GND-30,w:140,h:30,hp:2,c:'#555'},
     {x:555,y:GND-30,w:60,h:30,hp:2,c:'#555'},
   ];
- 
+
   // 6 pigs — spread across towers at different heights
   pigs=[
     // ground level inside fortress
@@ -111,26 +109,26 @@ function initGame(){
     // ground level between towers
     {x:480,y:GND-47,r:17,alive:true,dy:0},
   ];
- 
+
   hud();cancelAnimationFrame(animId);loop();
 }
- 
+
 function loop(){upd();draw();if(!over)animId=requestAnimationFrame(loop);else endGame();}
- 
+
 function upd(){
   cool=Math.max(0,cool-1);
   if(mA){
     mVY+=GRAV;mX+=mVX;mY+=mVY;colCheck();
-    if(mY>GND+80||mX>LW+80||mX<-80){mA=false;mIdx++;}
+    if(mY>GND+80||mX>LW+80||mX<-80){mA=false;}
   }
   for(let b of blocks){if(b.cr>0){b.cr--;if(b.cr<=0)b.gone=true;}}
   for(let p of pigs){if(p.dy>0){p.dy--;if(p.dy<=0)p.alive=false;}}
   parts=parts.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.18;p.life--;return p.life>0;});
   if(pigs.filter(p=>p.alive).length===0&&!over){over=true;won=true;}
-  if(moais.filter(m=>m.a).length===0&&!mA&&pigs.filter(p=>p.alive).length>0&&!over){over=true;won=false;}
+  if(mLeft===0&&!mA&&pigs.filter(p=>p.alive).length>0&&!over){over=true;won=false;}
   hud();
 }
- 
+
 function colCheck(){
   let r=22;
   for(let b of blocks){
@@ -141,7 +139,7 @@ function colCheck(){
       let mh=Math.min(mX+r-b.x,b.x+b.w-(mX-r)),mv=Math.min(mY+r-b.y,b.y+b.h-(mY-r));
       if(mh<mv)mVX*=-0.45;else mVY*=-0.45;
       mVX*=0.8;mVY*=0.8;
-      if(Math.abs(mVX)+Math.abs(mVY)<1.5){mA=false;mIdx++;}
+      if(Math.abs(mVX)+Math.abs(mVY)<1.5){mA=false;}
     }
   }
   for(let p of pigs){
@@ -156,20 +154,20 @@ function colCheck(){
   if(mY+r>=GND){
     mY=GND-r;mVY*=-0.28;mVX*=0.72;
     sp(mX,GND,'#FF4400',6);
-    if(Math.abs(mVY)<1.2){mA=false;mIdx++;}
+    if(Math.abs(mVY)<1.2){mA=false;}
   }
 }
- 
+
 function sp(x,y,c,n){
   for(let i=0;i<n;i++)parts.push({x,y,vx:rnd(-5.5,5.5),vy:rnd(-7,0.5),col:c,life:rnd(22,40)|0,r:rnd(2,6)});
 }
- 
+
 function draw(){
   ctx.clearRect(0,0,LW,LH);
   drawSky();drawGround();drawPowerMeter();drawSlingshot();
   drawBlocks();drawPigs();drawParticles();drawTrajectory();drawBullet();drawQueue();
 }
- 
+
 function drawSky(){
   // Darker reddish sky for level 2
   ctx.fillStyle='#160808';ctx.fillRect(0,0,LW,GND);
@@ -189,7 +187,7 @@ function drawSky(){
   ctx.fillStyle='#160808';
   for(let xi=310;xi<690;xi+=22){ctx.fillRect(xi,GND-162,12,18);}
 }
- 
+
 function drawGround(){
   ctx.fillStyle='#8B1A00';ctx.fillRect(0,GND,LW,LH-GND);
   ctx.fillStyle='#111';ctx.fillRect(0,GND,LW,3);
@@ -198,7 +196,7 @@ function drawGround(){
   ctx.fillStyle='#3a0800';
   for(let i=19;i<LW;i+=38)ctx.fillRect(i,GND+8,18,4);
 }
- 
+
 function drawPowerMeter(){
   if(!drag)return;
   let dx=dX-SX,dy=dY-SY,fr=Math.min(1,Math.sqrt(dx*dx+dy*dy)/PLIM);
@@ -210,7 +208,7 @@ function drawPowerMeter(){
   ctx.fillStyle='#fff';ctx.font='bold 9px Arial';ctx.textAlign='center';
   ctx.fillText('POWER',bx+bw/2,by-4);ctx.textAlign='left';
 }
- 
+
 function drawSlingshot(){
   ctx.save();
   ctx.strokeStyle='#5C3010';ctx.lineWidth=8;ctx.lineCap='round';
@@ -230,7 +228,7 @@ function drawSlingshot(){
   }
   ctx.restore();
 }
- 
+
 function drawTrajectory(){
   if(!drag)return;
   let dx=SX-dX,dy=SY-dY,spd=Math.sqrt(dx*dx+dy*dy);
@@ -242,7 +240,7 @@ function drawTrajectory(){
   }
   ctx.globalAlpha=1;
 }
- 
+
 function drawBlocks(){
   for(let b of blocks){
     if(b.gone)continue;
@@ -264,7 +262,7 @@ function drawBlocks(){
     ctx.globalAlpha=1;
   }
 }
- 
+
 function drawPigs(){
   for(let p of pigs){
     if(!p.alive)continue;
@@ -294,24 +292,18 @@ function drawPigs(){
     ctx.restore();ctx.globalAlpha=1;
   }
 }
- 
+
 function drawBullet(){
-  let mx,my,ang=0;
-  if(mA){mx=mX;my=mY;ang=Math.atan2(mVY,mVX);}
-  else if(drag){mx=dX;my=dY;}
-  else{mx=SX;my=SY;}
-  drawMoai(ctx,mx,my,22,ang);
+  if(mA){drawMoai(ctx,mX,mY,22,Math.atan2(mVY,mVX));}
+  else if(drag){drawMoai(ctx,dX,dY,22,0);}
+  else if(mLeft>0){drawMoai(ctx,SX,SY,22,0);}
 }
- 
+
 function drawQueue(){
-  let qi=0;
-  for(let i=0;i<moais.length;i++){
-    if(!moais[i].a)continue;
-    if(i===mIdx){if(!mA&&!drag)drawMoai(ctx,SX,SY,22,0);}
-    else{drawMoai(ctx,SX-52-qi*42,SY+10,15,0);qi++;}
-  }
+  let waiting=mLeft-(mA||drag?0:1);
+  for(let i=0;i<waiting;i++){drawMoai(ctx,SX-52-i*42,SY+10,15,0);}
 }
- 
+
 function drawParticles(){
   for(let p of parts){
     ctx.globalAlpha=p.life/38;ctx.fillStyle=p.col;
@@ -319,7 +311,7 @@ function drawParticles(){
   }
   ctx.globalAlpha=1;
 }
- 
+
 function drawMoai(c,x,y,r,angle){
   c.save();c.translate(x,y);c.rotate(angle*0.12);
   let h=r*2.5,w=r*1.5;
@@ -339,13 +331,13 @@ function drawMoai(c,x,y,r,angle){
   c.fillStyle='#c8c0b0';c.fillRect(-w*.14,-h*.55,w*.28,r*.3);
   c.restore();
 }
- 
+
 function hud(){
   document.getElementById('sv').textContent=score;
-  document.getElementById('mv').textContent=moais.filter(m=>m.a).length+(mA?1:0);
+  document.getElementById('mv').textContent=mLeft+(mA?1:0);
   document.getElementById('pv').textContent=pigs.filter(p=>p.alive).length;
 }
- 
+
 function endGame(){
   mo.style.display='block';
   if(won){
@@ -363,14 +355,14 @@ function endGame(){
   document.getElementById('rb').style.pointerEvents='all';
   document.getElementById('backbtn').style.pointerEvents='all';
 }
- 
+
 function gp(e){
   let rc=canvas.getBoundingClientRect(),sx=LW/rc.width,sy=LH/rc.height;
   if(e.touches)return{x:(e.touches[0].clientX-rc.left)*sx,y:(e.touches[0].clientY-rc.top)*sy};
   return{x:(e.clientX-rc.left)*sx,y:(e.clientY-rc.top)*sy};
 }
 function onDown(e){
-  e.preventDefault();if(over||mA||cool>0)return;
+  e.preventDefault();if(over||mA||cool>0||mLeft<=0)return;
   let{x,y}=gp(e);
   if(Math.sqrt((x-SX)**2+(y-SY)**2)<58){drag=true;dX=SX;dY=SY;}
 }
@@ -384,8 +376,9 @@ function onUp(e){
   e.preventDefault();if(!drag)return;drag=false;
   let dx=SX-dX,dy=SY-dY,spd=Math.sqrt(dx*dx+dy*dy);
   if(spd<10){mX=SX;mY=SY;return;}
-  mX=dX;mY=dY;mVX=dx*POW;mVY=dy*POW-spd*0.014;mA=true;
-  if(moais[mIdx])moais[mIdx].a=false;cool=45;
+  if(mLeft<=0)return;
+  mLeft--;
+  mX=dX;mY=dY;mVX=dx*POW;mVY=dy*POW-spd*0.014;mA=true;cool=45;
 }
 canvas.addEventListener('mousedown',onDown);
 canvas.addEventListener('mousemove',onMove);
