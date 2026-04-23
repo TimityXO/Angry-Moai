@@ -22,7 +22,7 @@
   #rb:active{background:#fff;}
   #nb{margin-top:8px;background:#fff;color:#111;border:none;border-radius:6px;font-size:clamp(12px,3vw,16px);font-weight:900;padding:clamp(7px,2vw,10px) clamp(16px,4vw,28px);cursor:pointer;letter-spacing:1px;pointer-events:all;display:none;width:100%;}
   #nb:active{background:#FFD700;}
-  #ah{position:absolute;bottom:clamp(4px,1.2vw,10px);left:50%;transform:translateX(-50%);color:rgba(255,215,0,0.45);font-size:clamp(7px,1.4vw,11px);font-weight:900;letter-spacing:1px;pointer-events:none;white-space:nowrap;}
+  #ah{position:absolute;bottom:clamp(4px,1.2vw,10px);left:50%;transform:translateX(-50%);color:rgb(255, 255, 255);font-size:clamp(7px,1.4vw,11px);font-weight:900;letter-spacing:1px;pointer-events:none;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -34,7 +34,7 @@
       <div id="mt">LEVEL CLEAR!</div>
       <div class="sub" id="ms"></div>
       <button id="rb" onclick="initGame()">PLAY AGAIN</button>
-      <button id="nb" onclick="window.location.href='game2.html'">🗿 NEXT LEVEL →</button>
+      <button id="nb" onclick="window.location.href='game1.html'">🗿 NEXT LEVEL →</button>
     </div>
     <div id="ah">DRAG MOAI TO AIM · RELEASE TO LAUNCH</div>
   </div>
@@ -52,15 +52,15 @@ const LW=680,LH=420;
 canvas.width=LW;canvas.height=LH;
 const GRAV=0.32,GND=LH-52,SX=90,SY=GND-65,PLIM=100,POW=0.26;
 let moais,pigs,blocks,parts,score,drag,dX,dY,over,won;
-let mVX=0,mVY=0,mX=SX,mY=SY,mA=false,mIdx=0,cool=0,animId;
+let mVX=0,mVY=0,mX=SX,mY=SY,mA=false,mLeft=0,cool=0,animId;
 
 function rnd(a,b){return a+Math.random()*(b-a);}
 
 function initGame(){
   over=false;won=false;score=0;mA=false;drag=false;
-  mVX=0;mVY=0;mX=SX;mY=SY;mIdx=0;cool=0;parts=[];
+  mVX=0;mVY=0;mX=SX;mY=SY;cool=0;parts=[];
   mo.style.display='none';
-  moais=[{a:true},{a:true},{a:true}];
+  mLeft=3;
   blocks=[
     {x:400,y:GND-60,w:16,h:60,hp:2,c:'#888'},{x:480,y:GND-60,w:16,h:60,hp:2,c:'#888'},
     {x:398,y:GND-78,w:100,h:18,hp:2,c:'#aaa'},{x:545,y:GND-60,w:16,h:60,hp:2,c:'#888'},
@@ -82,13 +82,13 @@ function upd(){
   cool=Math.max(0,cool-1);
   if(mA){
     mVY+=GRAV;mX+=mVX;mY+=mVY;colCheck();
-    if(mY>GND+80||mX>LW+80||mX<-80){mA=false;mIdx++;}
+    if(mY>GND+80||mX>LW+80||mX<-80){mA=false;}
   }
   for(let b of blocks){if(b.cr>0){b.cr--;if(b.cr<=0)b.gone=true;}}
   for(let p of pigs){if(p.dy>0){p.dy--;if(p.dy<=0)p.alive=false;}}
   parts=parts.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.18;p.life--;return p.life>0;});
   if(pigs.filter(p=>p.alive).length===0&&!over){over=true;won=true;}
-  if(moais.filter(m=>m.a).length===0&&!mA&&pigs.filter(p=>p.alive).length>0&&!over){over=true;won=false;}
+  if(mLeft===0&&!mA&&pigs.filter(p=>p.alive).length>0&&!over){over=true;won=false;}
   hud();
 }
 
@@ -102,7 +102,7 @@ function colCheck(){
       let mh=Math.min(mX+r-b.x,b.x+b.w-(mX-r)),mv=Math.min(mY+r-b.y,b.y+b.h-(mY-r));
       if(mh<mv)mVX*=-0.45;else mVY*=-0.45;
       mVX*=0.8;mVY*=0.8;
-      if(Math.abs(mVX)+Math.abs(mVY)<1.5){mA=false;mIdx++;}
+      if(Math.abs(mVX)+Math.abs(mVY)<1.5){mA=false;}
     }
   }
   for(let p of pigs){
@@ -117,7 +117,7 @@ function colCheck(){
   if(mY+r>=GND){
     mY=GND-r;mVY*=-0.28;mVX*=0.72;
     sp(mX,GND,'#FFD700',6);
-    if(Math.abs(mVY)<1.2){mA=false;mIdx++;}
+    if(Math.abs(mVY)<1.2){mA=false;}
   }
 }
 
@@ -216,16 +216,12 @@ function draw(){
   ctx.globalAlpha=1;
   // Active moai / bullet
   let mx,my,ang=0;
-  if(mA){mx=mX;my=mY;ang=Math.atan2(mVY,mVX);}
-  else if(drag){mx=dX;my=dY;}
-  else{mx=SX;my=SY;}
-  drawMoai(ctx,mx,my,22,ang);
-  // Queue moais
-  let qi=0;
-  for(let i=0;i<moais.length;i++){
-    if(!moais[i].a)continue;
-    if(i===mIdx){if(!mA&&!drag)drawMoai(ctx,SX,SY,22,0);}
-    else{drawMoai(ctx,SX-50-qi*46,SY+10,16,0);qi++;}
+  if(mA){mx=mX;my=mY;ang=Math.atan2(mVY,mVX);drawMoai(ctx,mx,my,22,ang);}
+  else if(drag){drawMoai(ctx,dX,dY,22,0);}
+  else if(mLeft>0){drawMoai(ctx,SX,SY,22,0);}
+  // Queue moais waiting
+  for(let i=0;i<mLeft-(mA||drag?0:1);i++){
+    drawMoai(ctx,SX-50-(i*46),SY+10,16,0);
   }
 }
 
@@ -251,7 +247,7 @@ function drawMoai(c,x,y,r,angle){
 
 function hud(){
   document.getElementById('sv').textContent=score;
-  document.getElementById('mv').textContent=moais.filter(m=>m.a).length+(mA?1:0);
+  document.getElementById('mv').textContent=mLeft+(mA?1:0);
   document.getElementById('pv').textContent=pigs.filter(p=>p.alive).length;
 }
 
@@ -270,7 +266,7 @@ function gp(e){
   return{x:(e.clientX-rc.left)*sx,y:(e.clientY-rc.top)*sy};
 }
 function onDown(e){
-  e.preventDefault();if(over||mA||cool>0)return;
+  e.preventDefault();if(over||mA||cool>0||mLeft<=0)return;
   let{x,y}=gp(e);
   if(Math.sqrt((x-SX)**2+(y-SY)**2)<58){drag=true;dX=SX;dY=SY;}
 }
@@ -284,8 +280,9 @@ function onUp(e){
   e.preventDefault();if(!drag)return;drag=false;
   let dx=SX-dX,dy=SY-dY,spd=Math.sqrt(dx*dx+dy*dy);
   if(spd<10){mX=SX;mY=SY;return;}
-  mX=dX;mY=dY;mVX=dx*POW;mVY=dy*POW-spd*0.014;mA=true;
-  if(moais[mIdx])moais[mIdx].a=false;cool=45;
+  if(mLeft<=0)return;
+  mLeft--;
+  mX=dX;mY=dY;mVX=dx*POW;mVY=dy*POW-spd*0.014;mA=true;cool=45;
 }
 canvas.addEventListener('mousedown',onDown);
 canvas.addEventListener('mousemove',onMove);
